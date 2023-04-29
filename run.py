@@ -4,6 +4,7 @@
 
 import gspread
 from google.oauth2.service_account import Credentials
+from pprint import pprint
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -61,8 +62,47 @@ def update_sales_worksheet(data):
     sales_worksheet.append_row(data)
     print('Sales worksheet updates  successfully.\n')
 
+def calculate_surplus_data(sales_row):
+    """
+    Compare sales with stock and caculate the surplus for wich item type.
 
-data = get_sales_data()
-sales_data = [int(num) for num in data]
-update_sales_worksheet(sales_data)
+    The surplus is defined as the sales figure subtracted fromthe stock:
+    -Positive  surplus indecates waste
+    -Negative surplus indecates extra made wehn stock was sold out.
+    """
+    print('Calculating surplus data...\n')
+    stock = SHEET.worksheet("stock").get_all_values()
+    stock_row = stock[-1]
+
+    surplus_data=[]
+    for stock, sales in zip(stock_row, sales_row):
+        surplus = int(stock) - sales 
+        surplus_data.append(surplus)
+
+    return surplus_data
+
+def update_surplus_worksheet(data):
+    """
+    Update surplus woksheet, add new row with the list data calculeted
+    by the function calculate_surples_data
+    """
+    print('Updating surplus worksheet...\n')
+    surplus_worksheet = SHEET.worksheet("surplus")
+    surplus_worksheet.append_row(data)
+    print('Surplus worksheet updates  successfully.\n')
+
+
+def main():
+    """
+    Run all program funtions
+    """
+    data = get_sales_data()
+    sales_data = [int(num) for num in data]
+    update_sales_worksheet(sales_data)
+    new_surplus_data = calculate_surplus_data(sales_data)
+    update_surplus_worksheet(new_surplus_data)
+    
+
+print('Welcome to Love Sandwiches Data Automation')
+main()
 
